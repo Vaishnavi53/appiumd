@@ -1,0 +1,41 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. Install base tools
+RUN apt-get update && apt-get install -y \
+    curl git unzip openjdk-11-jdk \
+    android-sdk adb \
+    libgl1-mesa-dev \
+    libpulse0 \
+    libvirt0 \
+    qemu-kvm \
+    wget \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Install Android SDK & Emulator
+RUN mkdir -p /opt/android-sdk/cmdline-tools && \
+    cd /opt/android-sdk/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip && \
+    unzip tools.zip && \
+    rm tools.zip
+
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH="$PATH:/opt/android-sdk/cmdline-tools/bin:/opt/android-sdk/platform-tools"
+
+# 3. Accept licenses and install required SDK packages
+RUN yes | /opt/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses
+RUN /opt/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} \
+    "platform-tools" "emulator" "platforms;android-30" "system-images;android-30;google_apis;arm64-v8a"
+
+# 4. Create AVD (emulator)
+RUN echo "no" | avdmanager create avd -n test -k "system-images;android-30;google_apis;arm64-v8a" --device "pixel"
+
+# 5. Install Appium
+RUN npm install -g appium
+
+EXPOSE 4723
+
+CMD ["sh"]
