@@ -1,59 +1,40 @@
-name: Run Appium C# Tests
+name: Run Appium Tests in Docker
 
 on:
   push:
-    branches:
-      - master
+    branches: master
+    
 
 jobs:
-  build-and-test:
+  appium-test:
     runs-on: ubuntu-latest
 
-    services:
-      appium:
-        image: appium/appium
-        ports:
-          - 4723:4723
-        options: --privileged
-
     steps:
-    - name: 📥 Checkout Repository
-      uses: actions/checkout@v4
+      # Checkout your repo
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: ⚙️ Set up .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '7.0.x'
+      # Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build -t appium-test .
 
-    - name: 🧱 Install Java & Android dependencies
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: 30
-        target: default
-        arch: x86_64
-        profile: pixel
-        script: echo "Emulator will start later..."
+      # Run Docker Container
+      - name: Run Appium Tests Inside Docker
+        run: |
+          docker run --name appium-container appium-test \
+          /bin/bash -c "
+            emulator -avd test -no-snapshot-load -no-window -gpu swiftshader_indirect & \
+            adb wait-for-device && \
+            appium & \
+            sleep 20 && \
+            dotnet test AppiumPractise.csproj
+          "
 
-    - name: 📦 Restore NuGet packages
-      run: dotnet restore
-
-    - name: 🛠️ Build the solution
-      run: dotnet build --configuration Release
-
-    - name: 📲 Start Android Emulator (ARM Image)
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: 30
-        target: default
-        arch: arm64-v8a # <- use ARM-based image
-        profile: pixel
-        emulator-options: -no-window -no-audio -no-snapshot
-        disable-animations: true
-
-
-    - name: 🚀 Run Appium Tests
-      env:
-        APPIUM_HOST: http://127.0.0.1:4723
-      run: |
-        echo "Running tests..."
-        dotnet test --logger "console;verbosity=detailed"
+      # (Optional) Save test logs
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: TestResults/
