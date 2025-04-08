@@ -17,7 +17,7 @@ namespace AppiumPractise.AppWebElements
         [OneTimeSetUp]
         public void setup()
         {
-            var appPath = "C:\\Users\\vaman\\Downloads\\ApiDemos-debug (1).apk";
+           var appPath = Path.Combine(Directory.GetCurrentDirectory(), "ApiDemos-debug (1).apk");
             var serverUri = new Uri(Environment.GetEnvironmentVariable("APPIUM_HOST") ?? "http://127.0.0.1:4723");
             var driverOptions = new AppiumOptions()
             {
