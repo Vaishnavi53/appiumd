@@ -1,40 +1,12 @@
-name: Run Appium Tests in Docker
+name : new workflow
 
-on:
-  push:
-    branches: master
-    
+on: push 
 
-jobs:
-  appium-test:
+jobs: 
+  info:
     runs-on: ubuntu-latest
-
-    steps:
-      # Checkout your repo
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      # Build Docker Image
-      - name: Build Docker Image
-        run: |
-          docker build -t appium-test .
-
-      # Run Docker Container
-      - name: Run Appium Tests Inside Docker
-        run: |
-          docker run --name appium-container appium-test \
-          /bin/bash -c "
-            emulator -avd test -no-snapshot-load -no-window -gpu swiftshader_indirect & \
-            adb wait-for-device && \
-            appium & \
-            sleep 20 && \
-            dotnet test AppiumPractise.csproj
-          "
-
-      # (Optional) Save test logs
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: TestResults/
+    steps: 
+      - name : Output github context
+        run: echo "{{toJSON(github)}}" 
+      
+    
