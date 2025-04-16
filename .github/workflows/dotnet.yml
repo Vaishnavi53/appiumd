@@ -38,7 +38,10 @@ jobs:
         run: |
           appium driver install uiautomator2
 
-      
+      - name: Install ADB
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-tools-adb
 
       - name: Wait for Emulator to Boot
         run: |
