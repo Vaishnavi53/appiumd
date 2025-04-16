@@ -1,12 +1,47 @@
-name : new workflow
+name: try appium run
 
-on: push 
+on:
+  push:
+    branches:
+      - master
 
-jobs: 
-  info:
+jobs:
+  test:
     runs-on: ubuntu-latest
-    steps: 
-      - name : Output github context
-        run: echo "${{toJSON(github)}}" 
-      
-    
+
+    services:
+      appium:
+        image: appium/appium
+        ports:
+          - 4723:4723
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set JAVA_HOME and update PATH
+        run: |
+          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
+          echo "PATH=$JAVA_HOME/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install Appium Doctor
+        run: |
+          npm install -g appium-doctor
+          appium-doctor
+
+      - name: List Available Appium Drivers
+        run: |
+          npm install -g appium@latest
+          appium driver list
+          
