@@ -8,26 +8,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        api-level: [35]
-        target: [google_apis_playstore]
-
-        
-    services:
-      appium:
-        image: appium/appium
-        ports:
-          - 4723:4723
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
 
       - name: Enable KVM
         run: |
@@ -57,10 +41,10 @@ jobs:
       - name: Start Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ matrix.api-level }}
-          target: ${{ matrix.target }}
+          api-level: 35
+          target: google_apis_playstore
           arch: x86_64
-          profile: Nexus 6
+          profile: pixel
           emulator-options: "-no-snapshot-save -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect"
 
       - name: Wait for Emulator to Boot
@@ -125,6 +109,3 @@ jobs:
 
       - name: Run Appium tests
         run: dotnet test AppiumPractise/AppiumPractise.csproj --logger trx
-
-      
-          
