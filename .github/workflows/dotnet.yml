@@ -38,14 +38,7 @@ jobs:
         run: |
           appium driver install uiautomator2
 
-      - name: Start Android Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis_playstore
-          arch: x86_64
-          profile: pixel
-          emulator-options: "-no-snapshot-save -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect"
+      
 
       - name: Wait for Emulator to Boot
         run: |
@@ -107,5 +100,8 @@ jobs:
       - name: Build project
         run: dotnet build AppiumPractise/AppiumPractise.csproj --configuration Release
 
-      - name: Run Appium tests
-        run: dotnet test AppiumPractise/AppiumPractise.csproj --logger trx
+      - name: run tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          script: dotnet test AppiumPractise/AppiumPractise.csproj --logger trx
