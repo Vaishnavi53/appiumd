@@ -33,7 +33,7 @@ namespace AppiumPractise.AppWebElements
 
             //modiftaction did after actions
 
-            driverOptions.AddAdditionalAppiumOption("avd", "medium_phone_api_35");
+          //  driverOptions.AddAdditionalAppiumOption("avd", "medium_phone_api_35");
           //  driverOptions.AddAdditionalAppiumOption("platformVersion", "15.0"); // Optional
 
 
