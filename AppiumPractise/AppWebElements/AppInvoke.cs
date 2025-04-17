@@ -40,7 +40,7 @@ namespace AppiumPractise.AppWebElements
             //Initializign appium server 
             //desired capabilities
             driverOptions.AddAdditionalAppiumOption("Application", appPath);
-            driverOptions.AddAdditionalAppiumOption("noReset", "true");
+            //driverOptions.AddAdditionalAppiumOption("noReset", "true");
             driverOptions.AddAdditionalAppiumOption("appActivity","io.appium.android.apis.ApiDemos");
             driverOptions.AddAdditionalAppiumOption("appPackage", "io.appium.android.apis");   
             driver = new AndroidDriver(serverUri, driverOptions, TimeSpan.FromSeconds(180));
