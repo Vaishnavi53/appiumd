@@ -54,6 +54,7 @@ namespace AppiumPractise.AppWebElements
         [Test]
         public void AppInvoketest()
         {
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
             IWebElement View = driver.FindElement(By.XPath("//android.widget.TextView[@content-desc=\"Views\"]"));
             View.Click();
         }
