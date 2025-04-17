@@ -47,10 +47,10 @@ jobs:
             npm install -g appium
             appium --log appium.log &
             sleep 10 # Give Appium server time to start
+            dotnet restore
+            dotnet build --configuration Release
+            dotnet test --no-build --configuration Release --logger "trx"
+
  
-            # Run Tests
-      - name: run test
-        run: |
-             dotnet restore
-             dotnet build --configuration Release
-             dotnet test --no-build --configuration Release --logger "trx"
+  
+        
