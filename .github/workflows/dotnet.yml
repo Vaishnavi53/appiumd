@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x' # or your version
+          dotnet-version: '8.0.x' # or your version
  
       - name: Install Android SDK and Emulator
         uses: android-actions/setup-android@v3
