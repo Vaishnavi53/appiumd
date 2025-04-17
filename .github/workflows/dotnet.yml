@@ -7,113 +7,64 @@ on:
 
 jobs:
   test:
+    name: Run Appium C# Tests on Windows Emulator
     runs-on: windows-latest
-
+    
+    timeout-minutes: 45
+ 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Set JAVA_HOME and update PATH
-        run: |
-          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
-          echo "PATH=$JAVA_HOME/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Install Appium Doctor
-        run: |
-          npm install -g appium-doctor
-          appium-doctor
-
-      - name: List Available Appium Drivers
-        run: |
-          npm install -g appium@latest
-          appium driver list
-
-      - name: Install UIAutomator2 Driver
-        run: |
-          appium driver install uiautomator2
-          
-      - name : Start android emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis_playstore
-          arch: arm64
-          profile: pixel
-          emulator-options: "-no-snapshot-save -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect"
-          
-      - name: Install ADB
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y android-tools-adb
-          
-      - name: Restart ADB Server
-        run: |
-          adb kill-server
-          sleep 3
-          adb start-server
-          sleep 3
-          adb devices
-          
-      - name: Wait for Emulator to Boot
-        run: |
-          echo "Waiting for emulator to boot..."
-          bootCompleted=""
-          while [ -z "$bootCompleted" ] || [ "$bootCompleted" -ne "1" ]; do
-            sleep 5
-            bootCompleted=$(adb shell getprop sys.boot_completed | tr -d '\r')
-            echo "Emulator boot status: $bootCompleted"
-          done
-          echo "Emulator boot completed!"
-
-     
-
-      - name: Retry ADB Connection if Offline
-        run: |
-          retries=5
-          while [ $retries -gt 0 ]; do
-            status=$(adb devices | grep "emulator" | awk '{print $2}')
-            if [ "$status" == "device" ]; then
-              echo "Emulator is online!"
-              exit 0
-            fi
-            echo "Emulator still offline... Retrying in 5s"
-            adb kill-server
-            adb start-server
-            sleep 5
-            retries=$((retries - 1))
-          done
-          echo "Emulator is still offline after retries. Exiting..."
-          exit 1
-
-      - name: List Connected Devices
-        run: adb devices
-
-      - name: Install APK Into Emulator
-        run: |
-          adb install -r ./ApiDemos-debug.apk
-        continue-on-error: true
-
-      - name: Launch App Before Running Tests
-        run: |
-          adb shell monkey -p io.appium.android.apis -c android.intent.category.LAUNCHER 1
-
-      - name: Set up .NET
+ 
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
-
-      - name: Install dependencies
-        run: dotnet restore AppiumPractise/AppiumPractise.csproj
-
-      - name: Build project
-        run: dotnet build AppiumPractise/AppiumPractise.csproj --configuration Release
-
-      - name: run tests
-        
-        run: dotnet test AppiumPractise/AppiumPractise.csproj --logger trx
+          dotnet-version: '6.0.x' # or your version
+ 
+      - name: Install Android SDK and Emulator
+        uses: android-actions/setup-android@v3
+ 
+      - name: Create Android Emulator
+        run: |
+          echo "y" | sdkmanager --install "system-images;android-30;google_apis;x86_64"
+          echo "no" | avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --device "pixel"
+        shell: cmd
+ 
+      - name: Start Emulator
+        run: |
+          start /B emulator -avd test -no-audio -no-window
+          adb wait-for-device
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+        shell: cmd
+ 
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+ 
+      - name: Install Appium
+        run: npm install -g appium
+ 
+      - name: Start Appium Server
+        run: |
+          start /B appium
+          timeout 10
+        shell: cmd
+ 
+      - name: Restore .NET Dependencies
+        run: dotnet restore
+ 
+      - name: Build the Project
+        run: dotnet build --configuration Release
+ 
+      - name: Run Tests
+        run: dotnet test --no-build --configuration Release --logger "trx"
+ 
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: TestResults
+          path: '**/TestResults/*.trx'
