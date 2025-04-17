@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x' # or your version
+          dotnet-version: '6.0.x' # or your version
  
       - name: Install Android SDK and Emulator
         uses: android-actions/setup-android@v3
@@ -62,9 +62,3 @@ jobs:
       - name: Run Tests
         run: dotnet test --no-build --configuration Release --logger "trx"
  
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: TestResults
-          path: '**/TestResults/*.trx'
