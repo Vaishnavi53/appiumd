@@ -4,61 +4,44 @@ on:
   push:
     branches:
       - master
-
+ 
 jobs:
   test:
-    name: Run Appium C# Tests on Windows Emulator
-    runs-on: windows-latest
-    
-    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
  
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
  
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x' # or your version
+          dotnet-version: '6.0.x' # Change as per your project
  
-      - name: Install Android SDK and Emulator
-        uses: android-actions/setup-android@v3
- 
-      - name: Create Android Emulator
-        run: |
-          echo "y" | sdkmanager --install "system-images;android-30;google_apis;x86_64"
-          echo "no" | avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --device "pixel"
-        shell: cmd
- 
-      - name: Start Emulator
-        run: |
-          start /B emulator -avd test -no-audio -no-window
-          adb wait-for-device
-          adb shell settings put global window_animation_scale 0
-          adb shell settings put global transition_animation_scale 0
-          adb shell settings put global animator_duration_scale 0
-        shell: cmd
- 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - name: Install Android SDK
+        uses: reactivecircus/android-emulator-runner@v2
         with:
-          node-version: 18
+          api-level: 35
+          target: default
+          arch: x86_64
+          force-avd-creation: true
+          emulator-options: '-no-window -no-audio'
+          disable-animations: true
+          script: |
+            echo "Emulator is running"
+            # Install Node & Appium
+            sudo apt-get update
+            sudo apt-get install -y curl
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            npm install -g appium
+            appium --log appium.log &
+            sleep 10 # Give Appium server time to start
  
-      - name: Install Appium
-        run: npm install -g appium
- 
-      - name: Start Appium Server
+            # Run Tests
+      - name: run test
         run: |
-          start /B appium
-          timeout 10
-        shell: cmd
- 
-      - name: Restore .NET Dependencies
-        run: dotnet restore
- 
-      - name: Build the Project
-        run: dotnet build --configuration Release
- 
-      - name: Run Tests
-        run: dotnet test --no-build --configuration Release --logger "trx"
- 
+             dotnet restore
+             dotnet build --configuration Release
+             dotnet test --no-build --configuration Release --logger "trx"
