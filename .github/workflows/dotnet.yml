@@ -18,7 +18,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x' # Change as per your project
+          dotnet-version: '8.0.x' # Change as per your project
 
       - name: Enable KVM
         run: |
